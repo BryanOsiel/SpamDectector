@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Detector de Spam</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    /* ========= COLORES Y ESTILO BASE ========= */
+    :root {
+      --primary: #6e8efb;
+      --secondary: #a777e3;
+      --background: linear-gradient(135deg, var(--primary), var(--secondary));
+      --white: #ffffff;
+      --text-dark: #222;
+      --text-light: #f2f2f2;
+      --success: #27ae60;
+      --danger: #872514;
+      --shadow: rgba(0, 0, 0, 0.15);
+      --radius: 14px;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: var(--background);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-dark);
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 25px var(--shadow);
+      padding: 2rem;
+      width: 90%;
+      max-width: 520px;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      color: var(--text-dark);
+      margin-bottom: 0.3rem;
+    }
+
+    h1 span {
+      color: var(--primary);
+    }
+
+    p.subtitle {
+      text-align: center;
+      color: #555;
+      font-size: 0.95rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .status {
+      display: none; /* 👈 Oculto por defecto */
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+      font-size: 0.9rem;
+      color: var(--success);
+      margin-bottom: 1.5rem;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    textarea {
+      width: 95%;
+      min-height: 80px;
+      border: 1.8px solid #ccc;
+      border-radius: var(--radius);
+      padding: 0.8rem;
+      font-size: 1rem;
+      resize: none;
+      transition: all 0.3s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(110, 142, 251, 0.2);
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    button {
+      width: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border: none;
+      color: white;
+      padding: 0.9rem;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: background 0.3s, transform 0.1s;
+    }
+
+    button:hover { opacity: 0.95; }
+    button:active { transform: scale(0.98); }
+
+    .examples {
+      background: #f7f7f7;
+      padding: 1rem;
+      border-radius: var(--radius);
+      margin-top: 1.5rem;
+    }
+
+    .examples h3 {
+      font-size: 0.95rem;
+      color: #555;
+      margin-bottom: 0.8rem;
+      text-align: left;
+    }
+
+    /* 🎨 Botones de ejemplo con colores mejorados */
+    .example-btn {
+      width: 100%;
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.7rem;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      text-align: left;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .example-btn.spam {
+      background: linear-gradient(90deg, #e74c3c, #f1948a);
+    }
+
+    .example-btn.normal {
+      background: linear-gradient(90deg, #27ae60, #58d68d);
+    }
+
+    .example-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    #resultado {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .spam { color: var(--danger); }
+    .no-spam { color: var(--success); }
+
+    .bar-container {
+      background: #eee;
+      border-radius: var(--radius);
+      height: 10px;
+      margin-top: 0.5rem;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      transition: width 0.8s ease;
+    }
+
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border-left-color: var(--primary);
+      animation: spin 1s linear infinite;
+      margin: 1rem auto;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🛡️ <span>Detector de Spam</span></h1>
+    <p class="subtitle">Detecta mensajes spam con Inteligencia Artificial</p>
+
+    <!-- ✅ Estado del modelo (oculto al inicio) -->
+    <div class="status" id="status">
+      ✅ <span>Modelo cargado y listo</span>
+    </div>
+
+    <form id="form">
+      <label for="mensaje">✉️ Escribe un mensaje para analizar:</label>
+      <textarea id="mensaje" name="mensaje" placeholder="Ej: Congratulations! You've won a $1000 gift card. Click here to claim now!" required></textarea>
+      <button type="submit">Analizar Mensaje</button>
+    </form>
+
+    <div id="resultado"></div>
+
+<div class="examples">
+  <h3>📋 Ejemplos para probar:</h3>
+  <button class="example-btn spam" data-msg="Congratulations! You’ve won a $1000 Walmart gift card. Click here to claim your prize!">💰 <b>SPAM</b> - Premio falso</button>
+  <button class="example-btn spam" data-msg="Get cheap loans instantly! No credit check required. Apply now!">⚠️ <b>SPAM</b> - Promesas financieras exageradas</button>
+  <button class="example-btn normal" data-msg="Hey, are we still meeting for lunch tomorrow?">😊 <b>NORMAL</b> - Conversación</button>
+  <button class="example-btn normal" data-msg="Your Amazon order has been shipped and will arrive tomorrow.">📦 <b>NORMAL</b> - Notificación</button>
+</div>
+
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const input = document.getElementById('mensaje');
+    const resultado = document.getElementById('resultado');
+    const statusEl = document.getElementById('status');
+    const exampleButtons = document.querySelectorAll('.example-btn');
+
+    // Simula carga del modelo (espera a que el backend esté listo)
+    async function checkModel() {
+      try {
+        const res = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mensaje: "test" })
+        });
+        if (res.ok) {
+          statusEl.style.display = "flex";
+        }
+      } catch (err) {
+        console.log("Esperando al modelo...");
+      }
+    }
+    window.addEventListener('load', checkModel);
+
+    // Coloca mensaje al presionar ejemplo
+    exampleButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        input.value = btn.getAttribute('data-msg');
+        resultado.innerHTML = "";
+      });
+    });
+
+    // Envía mensaje al backend Flask
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const mensaje = input.value.trim();
+      if (!mensaje) return;
+
+      resultado.innerHTML = '<div class="spinner"></div><p>Analizando mensaje...</p>';
+      resultado.className = "";
+
+      try {
+        const res = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mensaje })
+        });
+        const data = await res.json();
+
+        const porcentaje = Math.round(data.score * 100);
+        let color = data.label === "SPAM" ? "spam" : "no-spam";
+
+        resultado.innerHTML = `
+          ${data.label === "SPAM" ? "🚨" : "✅"} 
+          <span class="${color}">
+            ${data.label === "SPAM" ? "SPAM detectado" : "No es spam"}
+          </span><br>
+          <div class="bar-container"><div class="bar" style="width: ${porcentaje}%; background:${data.label === "SPAM" ? '#e74c3c' : '#27ae60'};"></div></div>
+          <small>Confianza: ${porcentaje}%</small>
+        `;
+      } catch (err) {
+        resultado.textContent = "❌ Error: " + err;
+      }
+    });
+  </script>
+</body>
+</html>

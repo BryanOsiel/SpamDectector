@@ -1,0 +1,7 @@
+flask==2.3.2
+tensorflow
+numpy
+pandas
+scikit-learn
+requests
+gunicorn   # opcional para producción
